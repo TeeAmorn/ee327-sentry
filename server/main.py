@@ -6,8 +6,20 @@ import cv2 as cv
 
 
 class MainHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render("index.html")
+
+
+<< << << < HEAD
+== == == =
+
+
+def check_origin(self, origin): return True
+
+
+>>>>>> > a328143(first commit)
+
+
+def get(self):
+    self.render("index.html")
 
 
 class StateManager:
@@ -45,6 +57,8 @@ class StateManager:
 
 class SentrySocketHandler(tornado.websocket.WebSocketHandler):
 
+    def check_origin(self, origin): return True
+
     def open(self):
         print("Sentry Opened")
         StateManager.set_sentry(self)
@@ -54,10 +68,12 @@ class SentrySocketHandler(tornado.websocket.WebSocketHandler):
         StateManager.clear_sentry()
 
     def on_message(self, message):
-        pass
+        print(message)
 
 
 class WebpageSocketHandler(tornado.websocket.WebSocketHandler):
+
+    def check_origin(self, origin): return True
 
     def open(self):
         print("Webpage Opened")
@@ -68,17 +84,24 @@ class WebpageSocketHandler(tornado.websocket.WebSocketHandler):
         StateManager.clear_webpage()
 
     def on_message(self, message):
-        pass
+        if not StateManager.is_ready():
+            return
 
 
 # ==================== TEST CODE ====================
 
 class TestAHandler(tornado.web.RequestHandler):
+
+    def check_origin(self, origin): return True
+
     def get(self):
         self.render("apage.html")
 
 
 class TestBHandler(tornado.web.RequestHandler):
+
+    def check_origin(self, origin): return True
+
     def get(self):
         self.render("bpage.html")
 
@@ -86,6 +109,8 @@ class TestBHandler(tornado.web.RequestHandler):
 class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 
     waiters = set()
+
+    def check_origin(self, origin): return True
 
     def open(self):
         print("Opened socket")
@@ -106,7 +131,8 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         print("Got message %r", message)
-        ChatSocketHandler.send_updates(message)
+        sentry = StateManager.get_sentry()
+        sentry.write_message(message)
 
 # =======================================================
 
