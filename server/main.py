@@ -75,27 +75,10 @@ class WebpageSocketHandler(tornado.websocket.WebSocketHandler):
         StateManager.clear_webpage()
 
     def on_message(self, message):
-        if not StateManager.is_ready():
-            return
+        pass
 
 
 # ==================== TEST CODE ====================
-
-class TestAHandler(tornado.web.RequestHandler):
-
-    def check_origin(self, origin): return True
-
-    def get(self):
-        self.render("apage.html")
-
-
-class TestBHandler(tornado.web.RequestHandler):
-
-    def check_origin(self, origin): return True
-
-    def get(self):
-        self.render("bpage.html")
-
 
 class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 
@@ -104,11 +87,11 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin): return True
 
     def open(self):
-        print("Opened socket")
+        print("Chat Opened")
         ChatSocketHandler.waiters.add(self)
 
     def on_close(self):
-        print("Closing socket")
+        print("Chat Closed")
         ChatSocketHandler.waiters.remove(self)
 
     @classmethod
@@ -131,8 +114,6 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 if __name__ == "__main__":
     application = tornado.web.Application([
         (r"/", MainHandler),
-        (r"/a", TestAHandler),
-        (r"/b", TestBHandler),
         (r"/sentry", SentrySocketHandler),
         (r"/webpage", WebpageSocketHandler),
         (r"/chat", ChatSocketHandler)
