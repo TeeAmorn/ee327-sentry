@@ -7,19 +7,10 @@ import cv2 as cv
 
 class MainHandler(tornado.web.RequestHandler):
 
+    def check_origin(self, origin): return True
 
-<< << << < HEAD
-== == == =
-
-
-def check_origin(self, origin): return True
-
-
->>>>>> > a328143(first commit)
-
-
-def get(self):
-    self.render("index.html")
+    def get(self):
+        self.render("index.html")
 
 
 class StateManager:
