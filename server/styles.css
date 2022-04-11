@@ -18,7 +18,7 @@ body {
 }
 
 .content {
-  max-width: 800px;
+  max-width: 640px;
   width: calc(100vw * 0.9);
   margin: auto;
 }
@@ -34,6 +34,7 @@ body {
   flex-direction: row;
   align-items: center;
   justify-content: space-around;
+  margin-bottom: 20px;
 }
 
 .option {
