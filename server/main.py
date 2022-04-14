@@ -1,8 +1,10 @@
+import base64
+import os
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
 import numpy as np
-import cv2 as cv
+import cv2
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -10,7 +12,7 @@ class MainHandler(tornado.web.RequestHandler):
     def check_origin(self, origin): return True
 
     def get(self):
-        self.render("index.html")
+        self.render("home.html")
 
 
 class StateManager:
@@ -41,10 +43,6 @@ class StateManager:
     def clear_webpage(cls):
         cls.webpage = None
 
-    @classmethod
-    def is_ready(cls):
-        return cls.sentry is not None and cls.webpage is not None
-
 
 class SentrySocketHandler(tornado.websocket.WebSocketHandler):
 
@@ -59,7 +57,11 @@ class SentrySocketHandler(tornado.websocket.WebSocketHandler):
         StateManager.clear_sentry()
 
     def on_message(self, message):
-        print(message)
+        # data = np.array(bytearray(message), dtype=np.uint8)
+        # img = np.reshape(data, (240, 320))
+        # _, jpeg = cv2.imencode('.jpg', img)
+        payload = base64.b64encode(message)
+        StateManager.get_webpage().write_message(payload)
 
 
 class WebpageSocketHandler(tornado.websocket.WebSocketHandler):
@@ -112,11 +114,16 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 
 
 if __name__ == "__main__":
-    application = tornado.web.Application([
-        (r"/", MainHandler),
-        (r"/sentry", SentrySocketHandler),
-        (r"/webpage", WebpageSocketHandler),
-        (r"/chat", ChatSocketHandler)
-    ])
+    settings = {
+        "template_path": os.path.join(os.path.dirname(__file__), "templates"),
+        "static_path": os.path.join(os.path.dirname(__file__), "static"),
+    }
+    application = tornado.web.Application(
+        handlers=[(r"/", MainHandler),
+                  (r"/sentry", SentrySocketHandler),
+                  (r"/webpage", WebpageSocketHandler),
+                  (r"/chat", ChatSocketHandler)],
+        **settings
+    )
     application.listen(8888)
     tornado.ioloop.IOLoop.current().start()
