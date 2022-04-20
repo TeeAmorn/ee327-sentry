@@ -30,28 +30,38 @@ void setup() {
 
 void loop() {
   
-  /*
+  
+  
   // Code to control servo using console input
-  Serial.println("Input servo angle");
-  while (Serial.available() == 0){
-    // If there is no input to console, don't do anything
-  }
-  servoPos=Serial.parseInt(); // Read console input, that will be servo angle
-  Serial.print("Desired angle: ");
-  Serial.println(servoPos);
-  myServo.write(servoPos);
-  delay(50);
-  */
+  // Serial.println("Input servo angle");
+  // while (Serial.available() == 0){
+  //   // If there is no input to console, don't do anything
+  // }
+  // servoPos=Serial.parseInt(); // Read console input, that will be servo angle
+  // Serial.print("Desired angle: ");
+  // Serial.println(servoPos);
+  // myServo.write(servoPos);
+  // delay(50);
+  
 
 
   // Making the servo go through all possible angles 
+  
   while(1){
+    // sweep from 0 -> 180 degrees
     for (servoPos = 0; servoPos <= 180; servoPos++){
       myServo.write(servoPos);
       Serial.println(servoPos);
-      delay(50);
+      //delay(50);
       }
+    // Sweep back from 180 -> 0 degrees
+    for (servoPos = 180; servoPos >= 0; servoPos--){
+      myServo.write(servoPos);
+      Serial.println(servoPos);
+      //delay(50);
+    }
   }
+  
   
   
 
