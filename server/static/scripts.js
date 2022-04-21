@@ -26,3 +26,9 @@ function onClickManual(event) {
     }
   }
 }
+
+var socket = new WebSocket("ws://localhost:8888/webpage");
+socket.onmessage = function (event) {
+  var img = document.getElementById("stream");
+  img.src = "data:image/jpg;base64," + event.data;
+};

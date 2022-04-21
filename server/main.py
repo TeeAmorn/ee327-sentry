@@ -1,8 +1,13 @@
+from asyncio import ThreadedChildWatcher
+import base64
+import os
+from cv2 import FONT_HERSHEY_SCRIPT_SIMPLEX
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
 import numpy as np
-import cv2 as cv
+import cv2
+import time
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -10,40 +15,40 @@ class MainHandler(tornado.web.RequestHandler):
     def check_origin(self, origin): return True
 
     def get(self):
-        self.render("index.html")
+        self.render("home.html")
 
 
 class StateManager:
     sentry = None
     webpage = None
+    cam1 = None
+    cam2 = None
+    cam3 = None
+    cam4 = None
 
-    @classmethod
-    def get_sentry(cls):
-        return cls.sentry
 
-    @classmethod
-    def set_sentry(cls, sentry):
-        cls.sentry = sentry
+class TimeBuffer:
 
-    @classmethod
-    def clear_sentry(cls):
-        cls.sentry = None
+    def __init__(self):
+        self.timestamps = np.array([])
+        self.BUFFER_SIZE = 20
+        self.currTime = None
 
-    @classmethod
-    def get_webpage(cls):
-        return StateManager.webpage
+    def push(self, timestamp):
+        if self.currTime is None:
+            pass
+        elif len(self.timestamps) < self.BUFFER_SIZE:
+            self.timestamps = np.append(
+                self.timestamps, timestamp - self.currTime)
+        else:
+            self.timestamps[:-1] = self.timestamps[1:]
+            self.timestamps[-1] = timestamp - self.currTime
+        self.currTime = timestamp
 
-    @classmethod
-    def set_webpage(cls, webpage):
-        cls.webpage = webpage
-
-    @classmethod
-    def clear_webpage(cls):
-        cls.webpage = None
-
-    @classmethod
-    def is_ready(cls):
-        return cls.sentry is not None and cls.webpage is not None
+    def get_fps(self):
+        if len(self.timestamps) == 0:
+            return 0
+        return 1/np.average(self.timestamps)
 
 
 class SentrySocketHandler(tornado.websocket.WebSocketHandler):
@@ -52,14 +57,41 @@ class SentrySocketHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
         print("Sentry Opened")
-        StateManager.set_sentry(self)
+        StateManager.sentry = self
+        self.timeBuffer = TimeBuffer()
 
     def on_close(self):
         print("Sentry Closed")
-        StateManager.clear_sentry()
+        StateManager.sentry = None
 
     def on_message(self, message):
-        print(message)
+        if StateManager.webpage:
+
+            # Decode received image
+            data = np.asarray(bytearray(message), dtype="uint8")
+            image = cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+            # Calculate FPS
+            self.timeBuffer.push(time.time())
+            fps = self.timeBuffer.get_fps()
+
+            # Put FPS onto image
+            org = (10, 20)
+            fontFace = cv2.FONT_HERSHEY_SIMPLEX
+            fontScale = 0.5
+            color = (255, 0, 0)
+            thickness = 1
+            lineType = cv2.LINE_AA
+            image = cv2.putText(image, "FPS: {:.1f}".format(fps), org, fontFace,
+                                fontScale, color, thickness, lineType)
+
+            # Convert to JPEG
+            encoded_image = cv2.imencode('.jpg', image)[1]
+            bytes_image = np.array(encoded_image).tobytes()
+
+            # Convert to base64 encoding and send image to webpage
+            payload = base64.b64encode(bytes_image)
+            StateManager.webpage.write_message(payload)
 
 
 class WebpageSocketHandler(tornado.websocket.WebSocketHandler):
@@ -68,11 +100,11 @@ class WebpageSocketHandler(tornado.websocket.WebSocketHandler):
 
     def open(self):
         print("Webpage Opened")
-        StateManager.set_webpage(self)
+        StateManager.webpage = self
 
     def on_close(self):
         print("Webpage Closed")
-        StateManager.clear_webpage()
+        StateManager.webpage = None
 
     def on_message(self, message):
         pass
@@ -112,11 +144,16 @@ class ChatSocketHandler(tornado.websocket.WebSocketHandler):
 
 
 if __name__ == "__main__":
-    application = tornado.web.Application([
-        (r"/", MainHandler),
-        (r"/sentry", SentrySocketHandler),
-        (r"/webpage", WebpageSocketHandler),
-        (r"/chat", ChatSocketHandler)
-    ])
+    settings = {
+        "template_path": os.path.join(os.path.dirname(__file__), "templates"),
+        "static_path": os.path.join(os.path.dirname(__file__), "static"),
+    }
+    application = tornado.web.Application(
+        handlers=[(r"/", MainHandler),
+                  (r"/sentry", SentrySocketHandler),
+                  (r"/webpage", WebpageSocketHandler),
+                  (r"/chat", ChatSocketHandler)],
+        **settings
+    )
     application.listen(8888)
     tornado.ioloop.IOLoop.current().start()
