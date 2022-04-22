@@ -16,12 +16,11 @@ cap = cv2.VideoCapture(0)
 while True:
     # Read the frame
     _, img = cap.read()
-    # Convert to grayscale
+    # Convert to grayscale, this Cascade only works when image is in grayscale for some reason
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Detect the faces
     faces = face_cascade.detectMultiScale(gray, 1.1, 4)
     # Draw the rectangle around each face
-    # Perhaps we could use data in face
     for (x, y, w, h) in faces:
         cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
     # Display
