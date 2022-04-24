@@ -45,6 +45,3 @@ void Servos::moveServos(String direction) {
         base.write(basePos);
         pan.write(panPos);
     }  
-
-
-

@@ -3,6 +3,7 @@
 #include <WiFi.h>
 
 #include "esp_camera.h"
+#include "servo.hpp"
 
 // Pin definition for CAMERA_MODEL_AI_THINKER
 #define PWDN_GPIO_NUM 32
@@ -33,6 +34,9 @@ WebSocketsClient webSocket;
 // Initialize camera instance
 camera_fb_t *fb = NULL;
 
+//Initializes both servos
+Servos servos;
+
 // Timer to take picture every PERIOD milliseconds
 unsigned long PERIOD = 1;
 unsigned long prevShot;
@@ -47,6 +51,7 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
             Serial.printf("[WSc] Connected to url: %s\n", payload);
             break;
         case WStype_TEXT:
+            servos.moveServos(payload);
             Serial.printf("[WSc] get text: %s\n", payload);
             break;
         case WStype_BIN:
