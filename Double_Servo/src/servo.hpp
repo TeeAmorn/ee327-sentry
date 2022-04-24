@@ -2,4 +2,7 @@
 
 #include <ESP32Servo.h>
 
-void servoInitialize(int baud);
+#define basePin 15  //change to desired basePin
+#define panPin 2    //changed to desired panPin
+
+void servoInitialize(Servo &base, Servo &pan);

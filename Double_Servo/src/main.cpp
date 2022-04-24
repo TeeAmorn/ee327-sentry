@@ -1,14 +1,16 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include "servo.hpp"
 #include <ESP32Servo.h> // Not the same as Arduino Servo library
 // ESP32Servo repo w/ examples: https://github.com/madhephaestus/ESP32Servo
 // I use the potetionmeter example here
 
+const char* ssid = "Device-Northwestern";  //internet ID
+const char* password = NULL;  //password
+
 // Need to attach servo to a PWM pin. 
 // Possible PWM pins on ESP32:
 // Recommended PWM GPIO pins on the ESP32 are: 2,4, 12-19, 21,23, 25-27, 32-33
-int basePin = 15; //Pin for base servo
-int panPin = 2;   //Pin for pan servo
 int basePos = 90; //Servo position. Should be an angle from 0-180 degrees
 int panPos = 180;
 char servoDir;  //Servo direction
@@ -21,20 +23,27 @@ char servoDir;  //Servo direction
 Servo base; //Initialize base servo object
 Servo pan;  //Initialize pan servo object
 
-int baud_rate = 9600; //desired baud rate
+int baud_rate = 115200; //desired baud rate
 
 
 void setup() {
-  servoInitialize(baud_rate);
+  Serial.begin(baud);
+  Serial.println();
 
-  base.setPeriodHertz(50); // Define frequency of servo (50 Hz is standard)
-  pan.setPeriodHertz(50);  
-  //myServo.attach(servoPin, servoMin, servoMax); // Attach servo object to servo pin, define min and max
-  base.attach(basePin); //
-  pan.attach(panPin); //
+  servoInitialize(&base, &pan);
+
   base.write(basePos);
   pan.write(panPos);
   delay(50);
+  
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi...");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println(WiFi.localIP());
 }
 
 void loop() {
