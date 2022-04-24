@@ -10,7 +10,6 @@ function onClickManual(event) {
       direction_buttons[i].classList.remove("disabled-button");
       direction_buttons[i].disabled = false;
     }
-    console.log(auto_switches[0].children[1].children[0].classList);
   } else {
     let auto_switches = document.getElementsByClassName("auto");
     for (var i = 0, max = auto_switches.length; i < max; i++) {
@@ -28,7 +27,12 @@ function onClickManual(event) {
 }
 
 var socket = new WebSocket("ws://localhost:8888/webpage");
+
 socket.onmessage = function (event) {
   var img = document.getElementById("stream");
   img.src = "data:image/jpg;base64," + event.data;
 };
+
+function sendControl(msg) {
+  socket.send(msg);
+}

@@ -25,6 +25,7 @@ class StateManager:
     cam2 = None
     cam3 = None
     cam4 = None
+    autoMode = True
 
 
 class TimeBuffer:
@@ -107,7 +108,33 @@ class WebpageSocketHandler(tornado.websocket.WebSocketHandler):
         StateManager.webpage = None
 
     def on_message(self, message):
-        pass
+        if message == "manualOn":
+            StateManager.autoMode = False
+        if message == "left":
+            print("left")
+            StateManager.autoMode = True
+            if StateManager.sentry:
+                StateManager.sentry.write_message("left")
+        if message == "right":
+            print("right")
+            StateManager.autoMode = True
+            if StateManager.sentry:
+                StateManager.sentry.write_message("right")
+        if message == "up":
+            print("up")
+            StateManager.autoMode = True
+            if StateManager.sentry:
+                StateManager.sentry.write_message("up")
+        if message == "down":
+            print("down")
+            StateManager.autoMode = True
+            if StateManager.sentry:
+                StateManager.sentry.write_message("down")
+        if message == "fire":
+            print("fire")
+            StateManager.autoMode = True
+            if StateManager.sentry:
+                StateManager.sentry.write_message("fire")
 
 
 # ==================== TEST CODE ====================

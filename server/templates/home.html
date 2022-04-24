@@ -60,19 +60,19 @@
         </div>
         <div class="dpad">
           <div class="center box">
-            <button class="direction disabled-button" disabled>FIRE</button>
+            <button id="fireButton" class="direction disabled-button" onclick="sendControl('fire')" disabled>FIRE</button>
           </div>
           <div class="up box">
-            <button class="direction disabled-button" disabled>UP</button>
+            <button id="upButton" class="direction disabled-button" onclick="sendControl('up')" disabled>UP</button>
           </div>
           <div class="down box">
-            <button class="direction disabled-button" disabled>DOWN</button>
+            <button id="downButton" class="direction disabled-button" onclick="sendControl('down')" disabled>DOWN</button>
           </div>
           <div class="left box">
-            <button class="direction disabled-button" disabled>LEFT</button>
+            <button id="leftButton" class="direction disabled-button" onclick="sendControl('left')" disabled>LEFT</button>
           </div>
           <div class="right box">
-            <button class="direction disabled-button" disabled>RIGHT</button>
+            <button id="rightButton" class="direction disabled-button" onclick="sendControl('right')" disabled>RIGHT</button>
           </div>
         </div>
       </div>
