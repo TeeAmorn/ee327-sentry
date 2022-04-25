@@ -2,6 +2,7 @@
 #include <WebSocketsClient.h>
 #include <WiFi.h>
 
+
 #include "esp_camera.h"
 #include "servo.hpp"
 
@@ -51,7 +52,7 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
             Serial.printf("[WSc] Connected to url: %s\n", payload);
             break;
         case WStype_TEXT:
-            servos.moveServos(payload);
+            servos.moveServos((char*)payload);
             Serial.printf("[WSc] get text: %s\n", payload);
             break;
         case WStype_BIN:
@@ -110,6 +111,7 @@ void setup() {
     */
 
     // camera initialization
+    /*
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
         Serial.printf("Camera init failed with error 0x%x", err);
@@ -122,6 +124,8 @@ void setup() {
         esp_camera_fb_return(fb);
         return;
     }
+    */
+    
 
     // Connect to WiFi
     WiFi.begin(ssid, passphrase);
@@ -134,7 +138,7 @@ void setup() {
     Serial.println("WiFi connected");
 
     // Connect WebSocket client to WebSocket server
-    webSocket.begin("10.105.64.191", 8888, "/sentry");
+    webSocket.begin("10.105.125.204", 8888, "/sentry");
 
     // Assign a callback function to the event handler
     webSocket.onEvent(webSocketEvent);
@@ -152,8 +156,10 @@ void loop() {
     webSocket.loop();
 
     // if (millis() - prevShot >= PERIOD)
+    /*
     if (true) {
         // Take picture with camera
+        
         fb = esp_camera_fb_get();
         if (!fb) {
             Serial.println("Camera capture failed");
@@ -164,11 +170,14 @@ void loop() {
         // Send picture through WebSocket
         webSocket.sendBIN((const uint8_t *)fb->buf, fb->len);
         esp_camera_fb_return(fb);
+        
 
         // Print FPS as captured from the ESP32
         Serial.printf("%.2f\nlength: %d\n", 1000 / (double)(millis() - prevShot), fb->len);
 
         // Reset timer
         prevShot = millis();
+        
     }
+    */
 }

@@ -20,5 +20,4 @@ struct Servos
     Servo pan;
 
     void moveServos(String direction);
-
 };

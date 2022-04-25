@@ -19,29 +19,30 @@ Servos::Servos()
 }
 
 void Servos::moveServos(String direction) {
-        if (direction == "down") {
-            panPos += 5;
-            if (panPos > 180) {
-                panPos = 180;
+    if (direction == "down") {
+        panPos += 5;
+        if (panPos > 180) {
+            panPos = 180;
         }
-        else if (direction == "up") {
-            panPos -= 5;
-            if (panPos < 90) {
-                panPos = 90;
-            }
+    }
+    else if (direction == "up") {
+        panPos -= 5;
+        if (panPos < 90) {
+            panPos = 90;
         }
-        else if (direction == "left") {
-            basePos += 10;
-            if (basePos > 180) {
-                basePos = 180;
-            }
+    }
+    else if (direction == "left") {
+        basePos += 10;
+        if (basePos > 180) {
+            basePos = 180;
         }
-        else if (direction == "right") {
-            basePos -= 10;
-            if (basePos < 0) {
-                basePos = 0;
-            }
+    }
+    else if (direction == "right") {
+        basePos -= 10;
+        if (basePos < 0) {
+            basePos = 0;
         }
-        base.write(basePos);
-        pan.write(panPos);
-    }  
+    }
+    base.write(basePos);
+    pan.write(panPos);
+} 
