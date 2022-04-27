@@ -55,7 +55,7 @@ bbox = faces[0] # Define ROI as the first detected face
 # Initialize tracker with first frame and bounding box
 ok = tracker.init(frame, bbox)
 
-frame_counter = 0 # Keep track of frames to determine when to reinit ROI
+# frame_counter = 0 # Keep track of frames to determine when to reinit ROI
 while True:
     # Read a new frame
     ok, frame = video.read()
@@ -84,9 +84,8 @@ while True:
     else :
         # Tracking failure
         cv2.putText(frame, "Tracking failure detected", (100,80), cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
-
-    # If we have processed 10 frames, reinitialize the ROI
-    if frame_counter >= 10:
+        
+        # Upon tracking failure, use Haar to find a new ROI 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.1, 4)
         if len(faces) == 0:
@@ -99,8 +98,26 @@ while True:
             # Initialize tracker with first frame and bounding box
             tracker = cv2.TrackerKCF_create()
             ok = tracker.init(frame, bbox)
-    # Display tracker type on frame
-    # cv2.putText(frame, tracker_type + " Tracker", (100,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50),2);
+
+    ### BELOW IS AN ALTERNATE METHOD FOR TRACKER REINITIALIZATION ###
+    # Below method is not as good for tracking the same person if two people are in frame 
+    # # If we have processed 10 frames, reinitialize the ROI
+    # if frame_counter >= 10:
+    #     # cv2.putText(frame, "Reinitializing", (100,110), cv2.FONT_HERSHEY_SIMPLEX, 0.75,(255,165,0),2)
+    #     # Uncomment above if you want an idea of how often we reinitialize
+    #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #     faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    #     if len(faces) == 0:
+    #         # If no faces are detected, simply continue to loop to load in the next frame
+    #         # Could also infinitely loop here and contiue to process frames until a face is found
+    #         pass
+    #     else:
+    #         bbox = faces[0] # Define ROI as the first detected face
+    #         frame_counter = 0 # Reset frame counter
+    #         # Initialize tracker with first frame and bounding box
+    #         tracker = cv2.TrackerKCF_create()
+    #         ok = tracker.init(frame, bbox)
+    #################################################################
 
     # Display FPS on frame
     cv2.putText(frame, "FPS : " + str(int(fps)), (100,50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50), 2);
