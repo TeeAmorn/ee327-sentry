@@ -26,7 +26,7 @@ function onClickManual(event) {
   }
 }
 
-var socket = new WebSocket("ws://localhost:8888/webpage");
+var socket = new WebSocket("ws://10.105.142.152:8888/webpage");
 
 socket.onmessage = function (event) {
   var img = document.getElementById("stream");
