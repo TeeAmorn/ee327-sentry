@@ -1,23 +1,23 @@
-var wsStream = "";
-var wsCam1 = "";
-var wsCam2 = "";
-var wsCam3 = "";
-var wsCam4 = "";
+var ws_stream0 = "";
+var ws_stream1 = "";
+var ws_stream2 = "";
+var ws_stream3 = "";
+var ws_stream4 = "";
 
-function set_stream(ws) {
-  wsStream = ws;
+function set_stream0(ws) {
+  ws_stream0 = ws;
 }
-function set_cam1(ws) {
-  wsCam1 = ws;
+function set_stream1(ws) {
+  ws_stream1 = ws;
 }
-function set_cam2(ws) {
-  wsCam2 = ws;
+function set_stream2(ws) {
+  ws_stream2 = ws;
 }
-function set_cam3(ws) {
-  wsCam3 = ws;
+function set_stream3(ws) {
+  ws_stream3 = ws;
 }
-function set_cam4(ws) {
-  wsCam4 = ws;
+function set_stream4(ws) {
+  ws_stream4 = ws;
 }
 
 function onClickManual(event) {
@@ -48,27 +48,27 @@ function onClickManual(event) {
   }
 }
 
-wsStream.onmessage = function (event) {
-  var img = document.getElementById("stream");
+ws_stream0.onmessage = function (event) {
+  var img = document.getElementById("stream0");
   img.src = "data:image/jpg;base64," + event.data;
 };
-wsCam1.onmessage = function (event) {
-  var img = document.getElementById("cam1");
+ws_stream1.onmessage = function (event) {
+  var img = document.getElementById("stream1");
   img.src = "data:image/jpg;base64," + event.data;
 };
-wsCam2.onmessage = function (event) {
-  var img = document.getElementById("cam2");
+ws_stream2.onmessage = function (event) {
+  var img = document.getElementById("stream2");
   img.src = "data:image/jpg;base64," + event.data;
 };
-wsCam3.onmessage = function (event) {
-  var img = document.getElementById("cam3");
+ws_stream3.onmessage = function (event) {
+  var img = document.getElementById("stream3");
   img.src = "data:image/jpg;base64," + event.data;
 };
-wsCam4.onmessage = function (event) {
-  var img = document.getElementById("cam4");
+ws_stream4.onmessage = function (event) {
+  var img = document.getElementById("stream4");
   img.src = "data:image/jpg;base64," + event.data;
 };
 
 function sendControl(msg) {
-  wsStream.send(msg);
+  ws_cam0.send(msg);
 }

@@ -14,16 +14,16 @@
     <script src="{{ static_url("scripts.js") }}">
     </script>
     <script type="text/javascript">
-      var stream = new WebSocket("ws://" + "{{ip}}" + ":8888/stream");
-      set_stream(stream);
-      var cam1 = new WebSocket("ws://" + "{{ip}}" + ":8888/cam1");
-      set_cam1(cam1);
-      var cam2 = new WebSocket("ws://" + "{{ip}}" + ":8888/cam2");
-      set_cam2(cam2);
-      var cam3 = new WebSocket("ws://" + "{{ip}}" + ":8888/cam3");
-      set_cam3(cam3);
-      var cam4 = new WebSocket("ws://" + "{{ip}}" + ":8888/cam4");
-      set_cam4(cam4);
+      var stream0 = new WebSocket("ws://" + "{{ip}}" + ":8888/stream0");
+      set_stream0(stream0);
+      var stream1 = new WebSocket("ws://" + "{{ip}}" + ":8888/stream1");
+      set_stream1(stream1);
+      var stream2 = new WebSocket("ws://" + "{{ip}}" + ":8888/stream2");
+      set_stream2(stream2);
+      var stream3 = new WebSocket("ws://" + "{{ip}}" + ":8888/stream3");
+      set_stream3(stream3);
+      var stream4 = new WebSocket("ws://" + "{{ip}}" + ":8888/stream4");
+      set_stream4(stream4);
     </script>
     <title>Sentry Controller</title>
   </head>
@@ -32,8 +32,8 @@
       <h1 class="title">Smart Sentry</h1>
       <img
         src="https://picsum.photos/1600/1200"
-        alt="stream from sentry"
-        id="stream"
+        alt="stream from cam 0"
+        id="cam0"
       />
       <div class="surrounding-cam">
         <img

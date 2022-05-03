@@ -48,12 +48,22 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 class StateManager:
+
+    # WebSocket Connections
     sentry = None
     webpage = None
+    cam0 = None
+    stream0 = None
     cam1 = None
+    stream1 = None
     cam2 = None
+    stream2 = None
     cam3 = None
+    stream3 = None
     cam4 = None
+    stream4 = None
+
+    # Configuration
     autoMode = True
 
 
@@ -95,87 +105,78 @@ class RTTCalculator:
         self.webSocket.write_message("ping")
 
 
-class StreamSocketHandler(tornado.websocket.WebSocketHandler):
-
-    def check_origin(self, origin): return True
-
-    def open(self):
-        LOG("Cam Opened")
-        StateManager.cam1 = self
-        self.timeBuffer = TimeBuffer()
-        self.rttCalculator = RTTCalculator(self, 1)
-        self.periodicPing = tornado.ioloop.PeriodicCallback(
-            self.rttCalculator.sendPing, 1000)
-        self.periodicPing.start()
-        self.rtt = 0
-
-    def on_close(self):
-        LOG("Cam Closed")
-        self.periodicPing.stop()
-        StateManager.cam1 = None
-
-    def on_message(self, message):
-        if StateManager.webpage:
-
-            # If message received is a ping
-            if (message == "ping"):
-                # Update RTT value
-                self.rtt = time.time() - self.rttCalculator.lastSent
-                DEBUG(self.rtt)
-
-            # If message received is an image
-            else:
-                # Decode received image
-                data = np.asarray(bytearray(message), dtype="uint8")
-                image = cv2.imdecode(data, cv2.IMREAD_COLOR)
-
-                # Calculate FPS
-                self.timeBuffer.push(time.time())
-                fps = self.timeBuffer.get_fps()
-
-                # Put FPS and RTT onto image
-                fpsPos = (10, 20)
-                rttPos = (10, 40)
-                fontFace = cv2.FONT_HERSHEY_SIMPLEX
-                fontScale = 0.5
-                color = (255, 0, 0)
-                thickness = 1
-                lineType = cv2.LINE_AA
-                image = cv2.putText(image, "FPS: {:.1f}".format(fps), fpsPos, fontFace,
-                                    fontScale, color, thickness, lineType)
-                image = cv2.putText(image, "RTT: {:.0f}".format(self.rtt * 1000), rttPos, fontFace,
-                                    fontScale, color, thickness, lineType)
-
-                # Convert to JPEG
-                encoded_image = cv2.imencode('.jpg', image)[1]
-                bytes_image = np.array(encoded_image).tobytes()
-
-                # Convert to base64 encoding and send image to webpage
-                payload = base64.b64encode(bytes_image)
-                StateManager.webpage.write_message(payload)
-
-
 class CamSocketHandler(tornado.websocket.WebSocketHandler):
 
     def check_origin(self, origin): return True
 
     def open(self):
-        LOG("Cam 1 Opened")
-        StateManager.cam1 = self
+
+        self.camName = "INVALID"
+        if (self.request.path == "/cam0"):
+            self.camName = "cam0"
+            StateManager.cam0 = self
+        elif (self.request.path == "/cam1"):
+            self.camName = "cam1"
+            StateManager.cam1 = self
+        elif (self.request.path == "/cam2"):
+            self.camName = "cam2"
+            StateManager.cam2 = self
+        elif (self.request.path == "/cam3"):
+            self.camName = "cam3"
+            StateManager.cam3 = self
+        elif (self.request.path == "/cam4"):
+            self.camName = "cam4"
+            StateManager.cam4 = self
+
+        LOG(self.camName + " Opened")
+
+        # Initialize time buffer to track FPS
         self.timeBuffer = TimeBuffer()
+
+        # Initialize RTT Calculator to track RTT
         self.rttCalculator = RTTCalculator(self, 1)
+
+        # Configure and start periodic RTT ping
         self.periodicPing = tornado.ioloop.PeriodicCallback(
             self.rttCalculator.sendPing, 1000)
         self.periodicPing.start()
+
+        # Iniaitlize current RTT to 0
         self.rtt = 0
 
     def on_close(self):
-        LOG("Cam Closed")
+
+        LOG(self.camName + " Closed")
+
+        # Stop sending RTT ping
         self.periodicPing.stop()
-        StateManager.cam1 = None
+
+        if (self.request.path == "/cam0"):
+            StateManager.cam0 = None
+        elif (self.request.path == "/cam1"):
+            StateManager.cam1 = None
+        elif (self.request.path == "/cam2"):
+            StateManager.cam2 = None
+        elif (self.request.path == "/cam3"):
+            StateManager.cam3 = None
+        elif (self.request.path == "/cam4"):
+            StateManager.cam4 = None
 
     def on_message(self, message):
-        if StateManager.webpage:
+
+        stream = None
+        if (self.request.path == "/cam0" and StateManager.stream0):
+            stream = StateManager.stream0
+        elif (self.request.path == "/cam1" and StateManager.stream1):
+            stream = StateManager.stream1
+        elif (self.request.path == "/cam2" and StateManager.stream2):
+            stream = StateManager.stream2
+        elif (self.request.path == "/cam3" and StateManager.stream3):
+            stream = StateManager.stream3
+        elif (self.request.path == "/cam4" and StateManager.stream4):
+            stream = StateManager.stream4
+
+        if stream:
 
             # If message received is a ping
             if (message == "ping"):
@@ -188,6 +189,13 @@ class CamSocketHandler(tornado.websocket.WebSocketHandler):
                 # Decode received image
                 data = np.asarray(bytearray(message), dtype="uint8")
                 image = cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+                # If images are from Cam0, do:
+                if (self.request.path == "/cam0"):
+                    pass
+                # Else, do:
+                else:
+                    pass
 
                 # Calculate FPS
                 self.timeBuffer.push(time.time())
@@ -212,7 +220,7 @@ class CamSocketHandler(tornado.websocket.WebSocketHandler):
 
                 # Convert to base64 encoding and send image to webpage
                 payload = base64.b64encode(bytes_image)
-                StateManager.webpage.write_message(payload)
+                stream.write_message(payload)
 
 
 class SentrySocketHandler(tornado.websocket.WebSocketHandler):
@@ -232,19 +240,51 @@ class SentrySocketHandler(tornado.websocket.WebSocketHandler):
         DEBUG("Received:", message)
 
 
-class WebpageSocketHandler(tornado.websocket.WebSocketHandler):
+class StreamSocketHandler(tornado.websocket.WebSocketHandler):
 
     def check_origin(self, origin): return True
 
     def open(self):
-        LOG("Webpage Opened")
-        StateManager.webpage = self
+
+        self.streamName = "INVALID"
+        if (self.request.path == "/stream0"):
+            self.streamName = "stream0"
+            StateManager.stream0 = self
+        elif (self.request.path == "/stream1"):
+            self.streamName = "stream1"
+            StateManager.stream1 = self
+        elif (self.request.path == "/stream2"):
+            self.streamName = "stream2"
+            StateManager.stream2 = self
+        elif (self.request.path == "/stream3"):
+            self.streamName = "stream3"
+            StateManager.stream3 = self
+        elif (self.request.path == "/stream4"):
+            self.streamName = "stream4"
+            StateManager.stream4 = self
+
+        LOG(self.streamName + " Opened")
 
     def on_close(self):
-        LOG("Webpage Closed")
-        StateManager.webpage = None
+
+        LOG(self.streamName + " Closed")
+
+        if (self.request.path == "/stream0"):
+            StateManager.stream0 = None
+        elif (self.request.path == "/stream1"):
+            StateManager.stream1 = None
+        elif (self.request.path == "/stream2"):
+            StateManager.stream2 = None
+        elif (self.request.path == "/stream3"):
+            StateManager.stream3 = None
+        elif (self.request.path == "/stream4"):
+            StateManager.stream4 = None
 
     def on_message(self, message):
+
+        if (self.request.path != "/stream0"):
+            return
+
         if message == "manualOn":
             StateManager.autoMode = False
         if message == "left":
@@ -282,8 +322,17 @@ if __name__ == "__main__":
     application = tornado.web.Application(
         handlers=[(r"/", MainHandler),
                   (r"/sentry", SentrySocketHandler),
-                  (r"/webpage", WebpageSocketHandler),
-                  (r"/stream", StreamSocketHandler)],
+                  (r"/cam0", CamSocketHandler),
+                  (r"/stream0", StreamSocketHandler),
+                  (r"/cam1", CamSocketHandler),
+                  (r"/stream1", StreamSocketHandler),
+                  (r"/cam2", CamSocketHandler),
+                  (r"/stream2", StreamSocketHandler),
+                  (r"/cam3", CamSocketHandler),
+                  (r"/stream3", StreamSocketHandler),
+                  (r"/cam4", CamSocketHandler),
+                  (r"/stream4", StreamSocketHandler),
+                  ],
         **settings
     )
     application.listen(8888)
