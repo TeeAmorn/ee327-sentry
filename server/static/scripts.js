@@ -70,5 +70,6 @@ ws_stream4.onmessage = function (event) {
 };
 
 function sendControl(msg) {
-  ws_cam0.send(msg);
+  console.log("sending " + msg);
+  ws_stream0.send(msg);
 }
