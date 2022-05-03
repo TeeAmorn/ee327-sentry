@@ -1,57 +1,18 @@
-# class Test:
-#     foo = "hello, world"
+import socket
 
 
-# a = Test()
-# b = Test()
-
-# print(Test.foo)
-# print(a.foo)
-# print(b.foo, "\n")
-
-# a.foo = 1
-
-# print(Test.foo)
-# print(a.foo)
-# print(b.foo, "\n")
-
-# del a.foo
-
-# print(Test.foo)
-# print(a.foo)
-# print(b.foo, "\n")
-
-# Test.foo = 2
-
-# print(Test.foo)
-# print(a.foo)
-# print(b.foo, "\n")
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
 
 
-from sre_parse import State
-
-
-class StateManager:
-    sentry = None
-    webpage = None
-
-    @classmethod
-    def get_sentry(cls):
-        return cls.sentry
-
-    @classmethod
-    def set_sentry(cls, sentry):
-        cls.sentry = sentry
-
-    @classmethod
-    def get_webpage(cls):
-        return StateManager.webpage
-
-    @classmethod
-    def set_webpage(cls, webpage):
-        cls.webpage = webpage
-
-
-print(StateManager.get_sentry())
-StateManager.set_sentry(2)
-print(StateManager.get_sentry())
+print(get_ip())

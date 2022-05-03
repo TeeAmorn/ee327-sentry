@@ -1,3 +1,25 @@
+var wsStream = "";
+var wsCam1 = "";
+var wsCam2 = "";
+var wsCam3 = "";
+var wsCam4 = "";
+
+function set_stream(ws) {
+  wsStream = ws;
+}
+function set_cam1(ws) {
+  wsCam1 = ws;
+}
+function set_cam2(ws) {
+  wsCam2 = ws;
+}
+function set_cam3(ws) {
+  wsCam3 = ws;
+}
+function set_cam4(ws) {
+  wsCam4 = ws;
+}
+
 function onClickManual(event) {
   if (event.target.checked) {
     let auto_switches = document.getElementsByClassName("auto");
@@ -26,13 +48,27 @@ function onClickManual(event) {
   }
 }
 
-var socket = new WebSocket("ws://10.105.142.152:8888/webpage");
-
-socket.onmessage = function (event) {
+wsStream.onmessage = function (event) {
   var img = document.getElementById("stream");
+  img.src = "data:image/jpg;base64," + event.data;
+};
+wsCam1.onmessage = function (event) {
+  var img = document.getElementById("cam1");
+  img.src = "data:image/jpg;base64," + event.data;
+};
+wsCam2.onmessage = function (event) {
+  var img = document.getElementById("cam2");
+  img.src = "data:image/jpg;base64," + event.data;
+};
+wsCam3.onmessage = function (event) {
+  var img = document.getElementById("cam3");
+  img.src = "data:image/jpg;base64," + event.data;
+};
+wsCam4.onmessage = function (event) {
+  var img = document.getElementById("cam4");
   img.src = "data:image/jpg;base64," + event.data;
 };
 
 function sendControl(msg) {
-  socket.send(msg);
+  wsStream.send(msg);
 }

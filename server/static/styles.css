@@ -29,6 +29,18 @@ body {
   border: 1px solid rgb(193, 193, 193);
 }
 
+.surrounding-cam {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.surrounding-cam img {
+  width: 24%;
+  border: 1px solid rgb(193, 193, 193);
+}
+
 .interface {
   display: flex;
   flex-direction: row;

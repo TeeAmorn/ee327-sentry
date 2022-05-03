@@ -11,7 +11,20 @@
       href="https://fonts.googleapis.com/css2?family=Lobster+Two:ital,wght@0,400;0,700;1,400;1,700&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap"
       rel="stylesheet"
     />
-    <script src="{{ static_url("scripts.js") }}"></script>
+    <script src="{{ static_url("scripts.js") }}">
+    </script>
+    <script type="text/javascript">
+      var stream = new WebSocket("ws://" + "{{ip}}" + ":8888/stream");
+      set_stream(stream);
+      var cam1 = new WebSocket("ws://" + "{{ip}}" + ":8888/cam1");
+      set_cam1(cam1);
+      var cam2 = new WebSocket("ws://" + "{{ip}}" + ":8888/cam2");
+      set_cam2(cam2);
+      var cam3 = new WebSocket("ws://" + "{{ip}}" + ":8888/cam3");
+      set_cam3(cam3);
+      var cam4 = new WebSocket("ws://" + "{{ip}}" + ":8888/cam4");
+      set_cam4(cam4);
+    </script>
     <title>Sentry Controller</title>
   </head>
   <body>
@@ -22,6 +35,28 @@
         alt="stream from sentry"
         id="stream"
       />
+      <div class="surrounding-cam">
+        <img
+          src="https://picsum.photos/1600/1200"
+          alt="stream from cam 1"
+          id="cam1"
+        />
+        <img
+          src="https://picsum.photos/1600/1200"
+          alt="stream from cam 2"
+          id="cam2"
+        />
+        <img
+          src="https://picsum.photos/1600/1200"
+          alt="stream from cam 3"
+          id="cam3"
+        />
+        <img
+          src="https://picsum.photos/1600/1200"
+          alt="stream from cam 4"
+          id="cam4"
+        />
+      </div>
       <div class="interface">
         <div class="controls">
           <div class="option">
