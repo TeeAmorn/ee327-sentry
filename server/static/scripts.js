@@ -6,18 +6,39 @@ var ws_stream4 = "";
 
 function set_stream0(ws) {
   ws_stream0 = ws;
+  ws_stream0.onmessage = function (event) {
+    console.log("received");
+    var img = document.getElementById("stream0");
+    img.src = "data:image/jpg;base64," + event.data;
+  };
 }
 function set_stream1(ws) {
   ws_stream1 = ws;
+  ws_stream1.onmessage = function (event) {
+    var img = document.getElementById("stream1");
+    img.src = "data:image/jpg;base64," + event.data;
+  };
 }
 function set_stream2(ws) {
   ws_stream2 = ws;
+  ws_stream2.onmessage = function (event) {
+    var img = document.getElementById("stream2");
+    img.src = "data:image/jpg;base64," + event.data;
+  };
 }
 function set_stream3(ws) {
   ws_stream3 = ws;
+  ws_stream3.onmessage = function (event) {
+    var img = document.getElementById("stream3");
+    img.src = "data:image/jpg;base64," + event.data;
+  };
 }
 function set_stream4(ws) {
   ws_stream4 = ws;
+  ws_stream4.onmessage = function (event) {
+    var img = document.getElementById("stream4");
+    img.src = "data:image/jpg;base64," + event.data;
+  };
 }
 
 function onClickManual(event) {
@@ -47,27 +68,6 @@ function onClickManual(event) {
     }
   }
 }
-
-ws_stream0.onmessage = function (event) {
-  var img = document.getElementById("stream0");
-  img.src = "data:image/jpg;base64," + event.data;
-};
-ws_stream1.onmessage = function (event) {
-  var img = document.getElementById("stream1");
-  img.src = "data:image/jpg;base64," + event.data;
-};
-ws_stream2.onmessage = function (event) {
-  var img = document.getElementById("stream2");
-  img.src = "data:image/jpg;base64," + event.data;
-};
-ws_stream3.onmessage = function (event) {
-  var img = document.getElementById("stream3");
-  img.src = "data:image/jpg;base64," + event.data;
-};
-ws_stream4.onmessage = function (event) {
-  var img = document.getElementById("stream4");
-  img.src = "data:image/jpg;base64," + event.data;
-};
 
 function sendControl(msg) {
   console.log("sending " + msg);

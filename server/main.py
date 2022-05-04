@@ -12,7 +12,7 @@ import tornado.websocket
 
 
 SET_LOG = True
-SET_DEBUG = False
+SET_DEBUG = True
 
 
 def LOG(text):
@@ -182,7 +182,7 @@ class CamSocketHandler(tornado.websocket.WebSocketHandler):
             if (message == "ping"):
                 # Update RTT value
                 self.rtt = time.time() - self.rttCalculator.lastSent
-                DEBUG(self.rtt)
+                # DEBUG(self.rtt)
 
             # If message received is an image
             else:
@@ -221,6 +221,7 @@ class CamSocketHandler(tornado.websocket.WebSocketHandler):
                 # Convert to base64 encoding and send image to webpage
                 payload = base64.b64encode(bytes_image)
                 stream.write_message(payload)
+                # print("sent")
 
 
 class SentrySocketHandler(tornado.websocket.WebSocketHandler):
