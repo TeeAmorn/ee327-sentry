@@ -1,6 +1,5 @@
 import base64
 import os
-from sched import scheduler
 from cv2 import FONT_HERSHEY_SCRIPT_SIMPLEX
 import numpy as np
 import cv2
@@ -12,7 +11,7 @@ import tornado.websocket
 
 
 SET_LOG = True
-SET_DEBUG = True
+SET_DEBUG = False
 
 
 def LOG(text):
@@ -66,6 +65,13 @@ class StateManager:
     # Configuration
     autoMode = True
 
+    # Current Images
+    image0 = None
+    image1 = None
+    image2 = None
+    image3 = None
+    image4 = None
+
 
 class TimeBuffer:
 
@@ -103,6 +109,54 @@ class RTTCalculator:
     def sendPing(self):
         self.lastSent = time.time()
         self.webSocket.write_message("ping")
+
+
+class SentryTracking:
+
+    def __init__(self, interval):
+        self.interval = interval
+        self.face_cascade = cv2.CascadeClassifier(
+            'haarcascade_frontalface_default.xml')
+        self.tracker = cv2.TrackerKCF_create()
+        self.foundTarget = False
+
+    def track(self):
+        # If we do not have an image yet or we are in manual mode, do nothing
+        if StateManager.image0 is None or not StateManager.autoMode:
+            return
+
+        # Use surrounding cameras to scan for people
+        if self.scanningMode:
+            self.scanningMode = False
+            LOG("Exitting scanning mode")
+            return
+
+        # Not in scanning mode; do image detection and tracking
+        frame = StateManager.image0
+
+        # If we have not found target, keep detecting
+        if not self.foundTarget:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
+            if len(faces) == 0:
+                # Change to scanning mode
+                self.scanningMode = True
+                LOG("Entering scanning mode")
+                return
+            else:
+                bbox = faces[0]
+                self.tracker = cv2.TrackerKCF_create()
+                self.foundTarget = self.tracker.init(frame, bbox)
+                LOG("Found at least one face to track")
+
+        # If we already found target, track it
+        else:
+            horizontal_delta = bbox[0]+bbox[2]//2 - frame.shape[0]
+            vertical_delta = bbox[1]+bbox[3]//2 - frame.shape[1]
+            if StateManager.sentry:
+                message = str(horizontal_delta) + ',' + str(vertical_delta)
+                StateManager.sentry.write_message(message)
+                DEBUG("Sent " + message + " command to sentry")
 
 
 class CamSocketHandler(tornado.websocket.WebSocketHandler):
@@ -190,12 +244,17 @@ class CamSocketHandler(tornado.websocket.WebSocketHandler):
                 data = np.asarray(bytearray(message), dtype="uint8")
                 image = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
-                # If images are from Cam0, do:
+                # Update current image state
                 if (self.request.path == "/cam0"):
-                    pass
-                # Else, do:
-                else:
-                    pass
+                    StateManager.image0 = image
+                elif (self.request.path == "/cam1"):
+                    StateManager.image1 = image
+                elif (self.request.path == "/cam2"):
+                    StateManager.image2 = image
+                elif (self.request.path == "/cam3"):
+                    StateManager.image3 = image
+                elif (self.request.path == "/cam4"):
+                    StateManager.image4 = image
 
                 # Calculate FPS
                 self.timeBuffer.push(time.time())
@@ -221,7 +280,6 @@ class CamSocketHandler(tornado.websocket.WebSocketHandler):
                 # Convert to base64 encoding and send image to webpage
                 payload = base64.b64encode(bytes_image)
                 stream.write_message(payload)
-                # print("sent")
 
 
 class SentrySocketHandler(tornado.websocket.WebSocketHandler):
@@ -289,27 +347,27 @@ class StreamSocketHandler(tornado.websocket.WebSocketHandler):
         if message == "manualOn":
             StateManager.autoMode = False
         if message == "left":
-            DEBUG("left")
+            DEBUG("Sending MANUAL command LEFT to the sentry")
             StateManager.autoMode = True
             if StateManager.sentry:
                 StateManager.sentry.write_message("left")
         if message == "right":
-            DEBUG("right")
+            DEBUG("Sending MANUAL command RIGHT to the sentry")
             StateManager.autoMode = True
             if StateManager.sentry:
                 StateManager.sentry.write_message("right")
         if message == "up":
-            DEBUG("up")
+            DEBUG("Sending MANUAL command UP to the sentry")
             StateManager.autoMode = True
             if StateManager.sentry:
                 StateManager.sentry.write_message("up")
         if message == "down":
-            DEBUG("down")
+            DEBUG("Sending MANUAL command DOWN to the sentry")
             StateManager.autoMode = True
             if StateManager.sentry:
                 StateManager.sentry.write_message("down")
         if message == "fire":
-            DEBUG("fire")
+            DEBUG("Sending MANUAL command FIRE to the sentry")
             StateManager.autoMode = True
             if StateManager.sentry:
                 StateManager.sentry.write_message("fire")
