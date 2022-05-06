@@ -5,9 +5,6 @@
 //#define basePin 15  //change to desired pin
 //#define panPin 2    //change
 
-void servoInitialize(Servo &base, Servo &pan);
-void servoMove();
-
 struct Servos
 {
     //Initializes the servos given pins
