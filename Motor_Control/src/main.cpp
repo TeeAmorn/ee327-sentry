@@ -2,26 +2,27 @@
 #include "DC_Motor.h"
 #include "double_motor.hpp"
 
-//Motors motors(4, 5, 6, 7);
-//String dir;
 // Recommended PWM GPIO pins on the ESP32 are: 2,4, 12-19, 21,23, 25-27, 32-33
 //DC_Motor Pan(2,4);
 DC_Motor motor2(2,4);
 Motors motors;
-//gonna use pins 2,4 for base
-// 16, 17 for pan
-// 5, 18 for encoder
+Encoder encoder(5, 18);
+//gonna use pins 2,4 for base, 16,17 for pan
+// 5, 18 for base encoder
+//for pan encoder
 void setup() {
+  Serial.begin(9600);
   motor2.stop_motor();
   delay(5000);
 }
 
 void loop() {
-  motor2.soft_start(1,90,10);
+  motor2.run_motor(1, 50);
   delay(3000);
-  motor2.smooth_stop(5);
-   motor2.soft_start(0,50,6);
+  motor2.run_motor(0, 50);
   delay(3000);
-  motor2.smooth_stop(3);
-  //motors.moveMotors(dir);
 }
+
+//test to do
+//check what encoder starts at
+//Serial.println(encoder.read());
