@@ -1,10 +1,10 @@
 #include "double_motor.hpp"
 
 Motors::Motors() 
-    : base(2, 4),
-      pan(16, 17),
-      base_enc(5, 18),
-      pan_enc(), //give pins
+    : base(2, 0),
+      pan(4, 16),
+      base_enc(17, 5),
+      pan_enc(0, 0), //give pins
       command("1")
 {
     //set encoder to some value
@@ -55,29 +55,31 @@ void Motors::moveMotors(String input) {
 //inside each while loop make a check serial avaialable
 //interrupt goes do something else and then comes abck
 
-
 //stops both motors
 void Motors::stopMotors() {
     base.stop_motor();
     pan.stop_motor();
 }
 
-
 //determines wether to go right or left, up or down given the target and the encoder of the motor 
 //we wish to move
 int Motors::shortestWay(int target, Encoder &enc) {
     long pos = enc.read();  //gets the current position of the motor
-    pos = pos % ENCODERMAX; 
-    //do some mod math
-    if (target > pos) { 
+    pos = pos% ENCODERMAX;
+    if (pos > target+ENCODERMAX/2) {
+        pos = pos - 445;
+    }
+    else if (pos < target-ENCODERMAX/2) {
+        pos = pos + 445;
+    }
+    
+    if ((target > pos) && (target-ENCODERMAX/2 < pos)) { 
         return 1;
     }
-    else if (target < pos) {
+    else if ((target+ENCODERMAX/2 > pos) && (target < pos)) {
         return 0;
     }
-    else {
-        return 2;   //this means target = pos
-    }
+    return 2;   //this means target = pos
 }
 
 //give target encoder position, the encoder of the motor we wish to move, and the motor

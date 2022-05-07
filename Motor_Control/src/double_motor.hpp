@@ -3,12 +3,11 @@
 #include "DC_Motor.h"
 #include <Encoder.h>
 
-#define CAM1Position 1
-#define CAM2Position 2
-#define CAM3Position 3
-#define CAM4Position 4
-#define ENCODERMAX 100
-//^^^^ make sure to change
+#define CAM1Position 0
+#define CAM2Position 111
+#define CAM3Position 223
+#define CAM4Position 334
+#define ENCODERMAX 445  //13355 ticks in 30 revolutions
 
 struct Motors
 {
@@ -24,8 +23,6 @@ struct Motors
     //dir == 1 means right, up
     //dir == 0 means left, down
     //dir == 2 means stop
-
-
 
     void moveMotors(String dir);
     void stopMotors();
