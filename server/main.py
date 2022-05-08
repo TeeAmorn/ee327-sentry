@@ -1,5 +1,6 @@
 import base64
 import os
+from sre_parse import State
 from cv2 import FONT_HERSHEY_SCRIPT_SIMPLEX
 import numpy as np
 import cv2
@@ -11,7 +12,7 @@ import tornado.websocket
 
 
 SET_LOG = True
-SET_DEBUG = False
+SET_DEBUG = True
 
 
 def LOG(text):
@@ -61,6 +62,7 @@ class StateManager:
     stream3 = None
     cam4 = None
     stream4 = None
+    stream5 = None
 
     # Configuration
     autoMode = True
@@ -113,50 +115,108 @@ class RTTCalculator:
 
 class SentryTracking:
 
-    def __init__(self, interval):
-        self.interval = interval
+    def __init__(self):
         self.face_cascade = cv2.CascadeClassifier(
             'haarcascade_frontalface_default.xml')
         self.tracker = cv2.TrackerKCF_create()
         self.foundTarget = False
+        self.scanningMode = True
 
     def track(self):
+
         # If we do not have an image yet or we are in manual mode, do nothing
         if StateManager.image0 is None or not StateManager.autoMode:
+            DEBUG("Stream0 not found or in MAUAL mode")
             return
+
+        frame = StateManager.image0
 
         # Use surrounding cameras to scan for people
         if self.scanningMode:
             self.scanningMode = False
             LOG("Exitting scanning mode")
+
+            # Send image to stream5 if exists
+            if StateManager.stream5:
+                cv2.putText(frame, "Tracking failure detected", (100, 80),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
+                # Convert to JPEG
+                encoded_image = cv2.imencode('.jpg', frame)[1]
+                bytes_image = np.array(encoded_image).tobytes()
+
+                # Convert to base64 encoding and send image to webpage
+                payload = base64.b64encode(bytes_image)
+                StateManager.stream5.write_message(payload)
+
             return
 
         # Not in scanning mode; do image detection and tracking
-        frame = StateManager.image0
-
         # If we have not found target, keep detecting
         if not self.foundTarget:
+
+            # Convert image to grayscale and then do detection
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
+
+            # If we did not detect any face, change back to scanning mode
             if len(faces) == 0:
+
                 # Change to scanning mode
                 self.scanningMode = True
                 LOG("Entering scanning mode")
-                return
+
+            # We did detect a face, thus start tracking it
             else:
                 bbox = faces[0]
                 self.tracker = cv2.TrackerKCF_create()
-                self.foundTarget = self.tracker.init(frame, bbox)
+                self.tracker.init(frame, bbox)
+                self.foundTarget = True
                 LOG("Found at least one face to track")
+
+            # Send image to stream5 if exists
+            if StateManager.stream5:
+                cv2.putText(frame, "Tracking failure detected", (100, 80),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
+                # Convert to JPEG
+                encoded_image = cv2.imencode('.jpg', frame)[1]
+                bytes_image = np.array(encoded_image).tobytes()
+
+                # Convert to base64 encoding and send image to webpage
+                payload = base64.b64encode(bytes_image)
+                StateManager.stream5.write_message(payload)
 
         # If we already found target, track it
         else:
-            horizontal_delta = bbox[0]+bbox[2]//2 - frame.shape[0]
-            vertical_delta = bbox[1]+bbox[3]//2 - frame.shape[1]
+
+            self.foundTarget, bbox = self.tracker.update(frame)
+
+            # Compute how far target is from the center of the screen
+            horizontal_delta = bbox[0]+bbox[2]//2 - frame.shape[1]//2
+            vertical_delta = bbox[1]+bbox[3]//2 - frame.shape[0]//2
+
+            # If sentry is connected, send movement commands to sentry
             if StateManager.sentry:
                 message = str(horizontal_delta) + ',' + str(vertical_delta)
                 StateManager.sentry.write_message(message)
-                DEBUG("Sent " + message + " command to sentry")
+                LOG("Sent " + message + " command to sentry")
+
+            # If stream5 exists, draw bounding box around image and send it
+            if StateManager.stream5:
+
+                # Draw bounding box
+                p1 = (int(bbox[0]), int(bbox[1]))
+                p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+                cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
+
+                # Convert to JPEG
+                encoded_image = cv2.imencode('.jpg', frame)[1]
+                bytes_image = np.array(encoded_image).tobytes()
+
+                # Convert to base64 encoding and send image to webpage
+                payload = base64.b64encode(bytes_image)
+                StateManager.stream5.write_message(payload)
 
 
 class CamSocketHandler(tornado.websocket.WebSocketHandler):
@@ -309,6 +369,12 @@ class StreamSocketHandler(tornado.websocket.WebSocketHandler):
         if (self.request.path == "/stream0"):
             self.streamName = "stream0"
             StateManager.stream0 = self
+
+            self.sentryTracking = SentryTracking()
+            self.sentryTrackingLoop = tornado.ioloop.PeriodicCallback(
+                self.sentryTracking.track, 250)
+            self.sentryTrackingLoop.start()
+
         elif (self.request.path == "/stream1"):
             self.streamName = "stream1"
             StateManager.stream1 = self
@@ -321,6 +387,9 @@ class StreamSocketHandler(tornado.websocket.WebSocketHandler):
         elif (self.request.path == "/stream4"):
             self.streamName = "stream4"
             StateManager.stream4 = self
+        elif (self.request.path == "/stream5"):
+            self.streamName = "stream5"
+            StateManager.stream5 = self
 
         LOG(self.streamName + " Opened")
 
@@ -338,6 +407,8 @@ class StreamSocketHandler(tornado.websocket.WebSocketHandler):
             StateManager.stream3 = None
         elif (self.request.path == "/stream4"):
             StateManager.stream4 = None
+        elif (self.request.path == "/stream5"):
+            StateManager.stream5 = None
 
     def on_message(self, message):
 
@@ -391,6 +462,7 @@ if __name__ == "__main__":
                   (r"/stream3", StreamSocketHandler),
                   (r"/cam4", CamSocketHandler),
                   (r"/stream4", StreamSocketHandler),
+                  (r"/stream5", StreamSocketHandler)
                   ],
         **settings
     )

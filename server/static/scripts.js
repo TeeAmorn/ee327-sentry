@@ -3,11 +3,11 @@ var ws_stream1 = "";
 var ws_stream2 = "";
 var ws_stream3 = "";
 var ws_stream4 = "";
+var ws_stream5 = "";
 
 function set_stream0(ws) {
   ws_stream0 = ws;
   ws_stream0.onmessage = function (event) {
-    console.log("received");
     var img = document.getElementById("stream0");
     img.src = "data:image/jpg;base64," + event.data;
   };
@@ -37,6 +37,13 @@ function set_stream4(ws) {
   ws_stream4 = ws;
   ws_stream4.onmessage = function (event) {
     var img = document.getElementById("stream4");
+    img.src = "data:image/jpg;base64," + event.data;
+  };
+}
+function set_stream5(ws) {
+  ws_stream5 = ws;
+  ws_stream5.onmessage = function (event) {
+    var img = document.getElementById("stream5");
     img.src = "data:image/jpg;base64," + event.data;
   };
 }
