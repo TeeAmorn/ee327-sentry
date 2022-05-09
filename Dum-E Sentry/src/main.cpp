@@ -138,7 +138,7 @@ void setup() {
     Serial.println("WiFi connected");
 
     // Connect WebSocket client to WebSocket server
-    webSocket.begin("10.105.125.204", 8888, "/sentry");
+    webSocket.begin("10.105.19.28", 8888, "/sentry");
 
     // Assign a callback function to the event handler
     webSocket.onEvent(webSocketEvent);

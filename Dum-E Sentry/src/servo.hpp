@@ -12,12 +12,13 @@ struct Servos
 {
     //Initializes the servos given pins
     Servos();
-    int basePin;
-    int panPin;
-    int basePos;
-    int panPos;
-    Servo base;
-    Servo pan;
+    int basePin, panPin;    //pins
+    int basePos, panPos;    //position of the servo
+    Servo base, pan;        //declare both servos
+    String command;         //string of input command
+    int desired_base, desired_pan;  //the desired position of pan and base
+
 
     void moveServos(String direction);
+    void decipherInput(String dir);
 };

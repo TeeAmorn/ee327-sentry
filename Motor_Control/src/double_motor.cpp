@@ -1,37 +1,39 @@
 #include "double_motor.hpp"
 
+
 Motors::Motors() 
     : base(2, 0),
       pan(4, 16),
-      base_enc(17, 5),
-      pan_enc(0, 0), //give pins
       command("1")
 {
+    base_enc.attachFullQuad(17,5);
+    pan_enc.attachFullQuad(0,0); //give pins
     //set encoder to some value
 }
 
 //checks input, if input is 1,2,3, or 4, it goes to one of the predetermined locations, otherwise it
 //changes the input into two numbers to go to
 void Motors::moveMotors(String input) {
+    ESP32Encoder::useInternalWeakPullResistors=UP;
     command = input;    //saves the initial input to command
     while(1) {
         if (command == "1") {
-            while(base_enc.read() != CAM1Position) {
+            while(base_enc.getCount() != CAM1Position) {
                 goshortestWay(CAM1Position, base_enc, base);
             }
         }
         else if (command == "2") {
-            while(base_enc.read() != CAM2Position) {
+            while(base_enc.getCount() != CAM2Position) {
                 goshortestWay(CAM2Position, base_enc, base);
             }
         }    
         else if (command == "3") {
-            while(base_enc.read() != CAM3Position) {
+            while(base_enc.getCount() != CAM3Position) {
                 goshortestWay(CAM3Position, base_enc, base);
             }
         }    
         else if (command == "4") {
-            while(base_enc.read() != CAM3Position) {
+            while(base_enc.getCount() != CAM3Position) {
                 goshortestWay(CAM4Position, base_enc, base);
             }
         }
@@ -47,24 +49,13 @@ void Motors::moveMotors(String input) {
     }
 }
 
-
-//make a function that goes to the desired input
-//have a variable that is pan_desired and base_desired
-//make a while loop that checks pan desired
-//make a while inside that check base desired
-//inside each while loop make a check serial avaialable
-//interrupt goes do something else and then comes abck
-
-//stops both motors
 void Motors::stopMotors() {
     base.stop_motor();
     pan.stop_motor();
 }
 
-//determines wether to go right or left, up or down given the target and the encoder of the motor 
-//we wish to move
-int Motors::shortestWay(int target, Encoder &enc) {
-    long pos = enc.read();  //gets the current position of the motor
+int Motors::shortestWay(int target, ESP32Encoder &enc) {
+    long pos = enc.getCount();  //gets the current position of the motor
     pos = pos% ENCODERMAX;
     if (pos > target+ENCODERMAX/2) {
         pos = pos - 445;
@@ -79,11 +70,11 @@ int Motors::shortestWay(int target, Encoder &enc) {
     else if ((target+ENCODERMAX/2 > pos) && (target < pos)) {
         return 0;
     }
-    return 2;   //this means target = pos
+    //return 2;   //this means target = pos
+    return 0;
 }
 
-//give target encoder position, the encoder of the motor we wish to move, and the motor
-void Motors::goshortestWay(int target, Encoder &enc, DC_Motor &motor) {
+void Motors::goshortestWay(int target, ESP32Encoder &enc, DC_Motor &motor) {
     int direction = shortestWay(target, enc);
     if (direction == 2) {
         base.stop_motor();  //if we're at target stop
@@ -92,7 +83,43 @@ void Motors::goshortestWay(int target, Encoder &enc, DC_Motor &motor) {
 }
 
 void Motors::decipherInput(String input) {
-    //parse the input into two numbers
-    //desired_base
-    //desired_pan
+    int base_length = 0;    //length of first number
+    int pan_length = 0;     //length of second number
+    for (int i = 0; input[i] != ','; i++) {
+        base_length++;  //counts how long first number is
+    }
+    for (int i = base_length + 1; input[i] != '\0'; i++) {
+        pan_length++;   //counts how second number is
+    }
+
+    int temp = 0;
+    //for base
+    if (input[0] == 45) {
+        for (int i = 1; i < base_length; i++) {
+            temp = (input[i] - 48) * pow(10, base_length - i - 1) + temp;
+        }
+        desired_base = base_enc.getCount() - temp;
+    }
+    else {
+        for (int i = 0; i < base_length; i++) {
+            temp = (input[i] - 48) * pow(10, base_length - i - 1) + temp;
+        }
+        desired_base = base_enc.getCount() + temp;
+    }
+
+    temp = 0;
+    //for pan
+    if (input[base_length+1] == 45) {
+        int temp = 0;
+            for (int i = base_length + 2; i < input.length(); i++) {
+                temp = (input[i] - 48) * pow(10, pan_length - i + base_length) + temp;
+        }
+        desired_pan = pan_enc.getCount() - temp;
+    }
+    else {
+        for (int i = base_length + 1; i < input.length(); i++) {
+            temp = (input[i] - 48) * pow(10, pan_length - i + base_length) + temp;
+        }
+        desired_pan = pan_enc.getCount() + temp;
+    }
 }
