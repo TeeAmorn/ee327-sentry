@@ -143,20 +143,23 @@ class SentryTracking:
                     StateManager.cam4 is None):
                 self.scanningMode = False
                 LOG("Surrounding cameras not on; exitting scanning mode")
+                return
 
             # Grab image from the surrounding cameras
             images = [None] * 4
-            images[0] = StateManager.cam1
-            images[1] = StateManager.cam2
-            images[2] = StateManager.cam3
-            images[3] = StateManager.cam4
+            images[0] = StateManager.image1
+            images[1] = StateManager.image2
+            images[2] = StateManager.image3
+            images[3] = StateManager.image4
 
             # Search the images for a target; select one with the largest area
             cameraTarget = -1
             targetSize = -1
+            camOn = False
             for cam_no, image in enumerate(images):
                 if image is None:
                     continue
+                camOn = True
                 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                 faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
                 for face in faces:
@@ -165,11 +168,13 @@ class SentryTracking:
                         cameraTarget = cam_no
 
             # If target not found, do nothing
-            if cameraTarget == -1:
+            if not camOn:
+                self.scanningMode = False
                 LOG("Surrounding cameras not on; exitting scanning mode")
+                return
 
             # If target found, exit scanning mode and tell sentry to turn to that direction
-            else:
+            if cameraTarget != -1:
                 self.scanningMode = False
                 if StateManager.sentry:
                     StateManager.sentry.write_message(
@@ -178,6 +183,7 @@ class SentryTracking:
                         camera_direction[cameraTarget] + " to sentry")
                 LOG("Found target in CAMERA " +
                     str(cameraTarget+1) + "; exitting scanning mode")
+                return
 
             # Send image to stream5 if exists
             if StateManager.stream5:
@@ -191,6 +197,8 @@ class SentryTracking:
                 # Convert to base64 encoding and send image to webpage
                 payload = base64.b64encode(bytes_image)
                 StateManager.stream5.write_message(payload)
+
+            # self.scanningMode = False
 
         # We're not in scanning mode, sentry takes control
         else:
@@ -386,7 +394,7 @@ class CamSocketHandler(tornado.websocket.WebSocketHandler):
                 payload = base64.b64encode(bytes_image)
                 stream.write_message(payload)
 
-        if (self.request.path == "/cam0" and StateManager.stream0):
+        if (StateManager.autoMode and self.request.path == "/cam0" and StateManager.stream0):
             self.sentryTracking.track()
 
 
