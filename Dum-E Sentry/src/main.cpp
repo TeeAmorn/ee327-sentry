@@ -52,7 +52,8 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
             Serial.printf("[WSc] Connected to url: %s\n", payload);
             break;
         case WStype_TEXT:
-            servos.moveServos((char*)payload);
+            //servos.moveServos((char*)payload);
+            servos.decipherInput((char*) payload);
             Serial.printf("[WSc] get text: %s\n", payload);
             break;
         case WStype_BIN:
@@ -68,6 +69,7 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
 void setup() {
     // put your  setup code here, to run once:
     Serial.begin(115200);
+    servos.moveServos("0,0");
 
     // camera configuration
     camera_config_t config;

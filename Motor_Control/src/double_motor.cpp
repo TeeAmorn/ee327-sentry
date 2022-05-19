@@ -2,52 +2,59 @@
 
 
 Motors::Motors() 
-    : base(2, 0),
-      pan(4, 16),
-      command("1")
+    : base(2, 4),
+      pan(12, 13),  //change these pins
+      old_command("1"),
+      new_command("1")
 {
-    base_enc.attachFullQuad(17,5);
-    pan_enc.attachFullQuad(0,0); //give pins
+    ESP32Encoder::useInternalWeakPullResistors=UP;
+
+    base_enc.attachFullQuad(16,17);
+    pan_enc.attachFullQuad(18,19); //change these pins
     //set encoder to some value
+
 }
 
 //checks input, if input is 1,2,3, or 4, it goes to one of the predetermined locations, otherwise it
 //changes the input into two numbers to go to
+//maybe use a hall sensor for the motors to know where they are
+//make it move until it is home and call it 0
+//make move motors set the target
+/*
 void Motors::moveMotors(String input) {
     ESP32Encoder::useInternalWeakPullResistors=UP;
     command = input;    //saves the initial input to command
-    while(1) {
-        if (command == "1") {
-            while(base_enc.getCount() != CAM1Position) {
-                goshortestWay(CAM1Position, base_enc, base);
-            }
-        }
-        else if (command == "2") {
-            while(base_enc.getCount() != CAM2Position) {
-                goshortestWay(CAM2Position, base_enc, base);
-            }
-        }    
-        else if (command == "3") {
-            while(base_enc.getCount() != CAM3Position) {
-                goshortestWay(CAM3Position, base_enc, base);
-            }
-        }    
-        else if (command == "4") {
-            while(base_enc.getCount() != CAM3Position) {
-                goshortestWay(CAM4Position, base_enc, base);
-            }
-        }
-        else {
-            decipherInput(command); //decipher input into two numbers
-            //this will change desired_base and desired_pan
-            goshortestWay(desired_base, base_enc, base);    //goes shortest way for base
-            goshortestWay(desired_pan, pan_enc, pan);       //goes shortest way for pan
-            //add an iterupt that checks the input
-            //if there's something at the input then command = new input
-            //if there'es nothing at the input then this just keeps looping
+    if (command == "1") {
+        while(base_enc.getCount() != CAM1Position) {
+            goshortestWay(CAM1Position, base_enc, base);
         }
     }
+    else if (command == "2") {
+        while(base_enc.getCount() != CAM2Position) {
+            goshortestWay(CAM2Position, base_enc, base);
+        }
+    }    
+    else if (command == "3") {
+        while(base_enc.getCount() != CAM3Position) {
+            goshortestWay(CAM3Position, base_enc, base);
+        }
+    }    
+    else if (command == "4") {
+        while(base_enc.getCount() != CAM3Position) {
+            goshortestWay(CAM4Position, base_enc, base);
+        }
+    }
+    else {
+        decipherInput(command); //decipher input into two numbers
+        //this will change desired_base and desired_pan
+        goshortestWay(desired_base, base_enc, base);    //goes shortest way for base
+        goshortestWay(desired_pan, pan_enc, pan);       //goes shortest way for pan
+        //add an iterupt that checks the input
+        //if there's something at the input then command = new input
+        //if there'es nothing at the input then this just keeps looping
+    }
 }
+*/
 
 void Motors::stopMotors() {
     base.stop_motor();
@@ -65,10 +72,12 @@ int Motors::shortestWay(int target, ESP32Encoder &enc) {
     }
     
     if ((target > pos) && (target-ENCODERMAX/2 < pos)) { 
-        return 1;
+        return 0;
+        //return 1;
     }
     else if ((target+ENCODERMAX/2 > pos) && (target < pos)) {
-        return 0;
+        return 1;
+        //return 0;
     }
     //return 2;   //this means target = pos
     return 0;
@@ -79,8 +88,10 @@ void Motors::goshortestWay(int target, ESP32Encoder &enc, DC_Motor &motor) {
     if (direction == 2) {
         base.stop_motor();  //if we're at target stop
     }
-    motor.run_motor(direction, 100);    //else move in the direction of the target
+    motor.run_motor(direction, 10);    //else move in the direction of the target
 }
+
+//arduinoJSON
 
 void Motors::decipherInput(String input) {
     int base_length = 0;    //length of first number
@@ -122,4 +133,22 @@ void Motors::decipherInput(String input) {
         }
         desired_pan = pan_enc.getCount() + temp;
     }
+}
+
+int Motors::absDistanceToPosn(ESP32Encoder &enc, int target) {
+    long pos = enc.getCount();
+    pos = pos % ENCODERMAX;
+    target = target % ENCODERMAX;
+    if (target < 0) {
+        target = ENCODERMAX + target;   //make target posive
+    }
+    if (pos < 0) {
+        pos = ENCODERMAX + pos;  //make pos positive
+    }
+    int temp = abs(pos - target);
+
+    if (temp > 180) {
+        return ENCODERMAX - temp;
+    }
+    return temp;
 }

@@ -8,14 +8,17 @@
 #include <iostream>
 //#include <Encoder.h>
 #include <ESP32Encoder.h>
+//#include <esp_task.h>
 
 using namespace std;
 
-#define CAM1Position 0
-#define CAM2Position 111
-#define CAM3Position 223
-#define CAM4Position 334
+#define NORTH 0
+#define EAST 334
+#define SOUTH 225
+#define WEST 111
 #define ENCODERMAX 445  //13355 ticks in 30 revolutions
+
+//extern int x;
 
 struct Motors
 {
@@ -23,7 +26,7 @@ struct Motors
     //int base1, base2, pan1, pan2;
     DC_Motor base, pan;
     ESP32Encoder base_enc, pan_enc;
-    String command; //this is the input string to tell us where to go
+    String old_command, new_command; //this is the input string to tell us where to go
     long desired_base, desired_pan;
     int new_dir;
     //dir == 1 means CCW
@@ -44,4 +47,8 @@ struct Motors
 
     //given a string input deciphers the input into base and pan directions in pixels
     void decipherInput(String dir);
+
+    //calculates absolute given position from encoder to target
+    int absDistanceToPosn(ESP32Encoder &enc, int target);
 };
+
