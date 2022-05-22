@@ -123,6 +123,7 @@ class SentryTracking:
         self.tracker = cv2.TrackerKCF_create()
         self.foundTarget = False
         self.scanningMode = True
+        self.trackingFailedCount = 0
 
     def track(self):
 
@@ -131,12 +132,13 @@ class SentryTracking:
             DEBUG("Stream0 not found or in MAUAL mode")
             return
 
+        # Make copy of image0
         frame = np.copy(StateManager.image0)
 
         # Use surrounding cameras to scan for people
         if self.scanningMode:
 
-            # If none of the surrounding cameras are on right now, stoop
+            # If none of the surrounding cameras are on right now, stop
             if (StateManager.cam1 is None and
                 StateManager.cam2 is None and
                 StateManager.cam3 is None and
@@ -167,10 +169,10 @@ class SentryTracking:
                         targetSize = face[2]*face[3]
                         cameraTarget = cam_no
 
-            # If target not found, do nothing
+            # If surrounding cameras haven't sent any images, quit scanning mode
             if not camOn:
                 self.scanningMode = False
-                LOG("Surrounding cameras not on; exitting scanning mode")
+                LOG("Surrounding camera images not found; exitting scanning mode")
                 return
 
             # If target found, exit scanning mode and tell sentry to turn to that direction
@@ -187,7 +189,7 @@ class SentryTracking:
 
             # Send image to stream5 if exists
             if StateManager.stream5:
-                cv2.putText(frame, "Tracking failure detected", (100, 80),
+                cv2.putText(frame, "Scanning Mode", (100, 80),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
 
                 # Convert to JPEG
@@ -210,18 +212,35 @@ class SentryTracking:
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
 
-                # If we did not detect any face, change back to scanning mode
+                # If we did not detect any face, increment failed counts
                 if len(faces) == 0:
 
-                    # Change to scanning mode
-                    self.scanningMode = True
-                    LOG("Entering scanning mode")
+                    # Increment count by 1
+                    self.trackingFailedCount += 1
+
+                    # Check if we have failed 5 times
+                    if self.trackingFailedCount == 40:
+
+                        # Reset count
+                        self.trackingFailedCount = 0
+
+                        # Change to scanning mode
+                        self.scanningMode = True
+                        self.foundTarget = False
+                        LOG("Entering scanning mode")
 
                 # We did detect a face, thus start tracking it
                 else:
+
+                    # Reset count
+                    self.trackingFailedCount = 0
+
+                    # Track face using bounding box
                     bbox = faces[0]
                     self.tracker = cv2.TrackerKCF_create()
                     self.tracker.init(frame, bbox)
+
+                    # Update foundTarget
                     self.foundTarget = True
                     LOG("Found at least one face to track")
 
@@ -333,7 +352,6 @@ class CamSocketHandler(tornado.websocket.WebSocketHandler):
         stream = None
         if (self.request.path == "/cam0" and StateManager.stream0):
             stream = StateManager.stream0
-            self.sentryTracking.track()
         elif (self.request.path == "/cam1" and StateManager.stream1):
             stream = StateManager.stream1
         elif (self.request.path == "/cam2" and StateManager.stream2):
@@ -466,30 +484,34 @@ class StreamSocketHandler(tornado.websocket.WebSocketHandler):
             return
 
         if message == "manualOn":
+            LOG("Turning MANUAL mode ON")
             StateManager.autoMode = False
+        if message == "manualOff":
+            LOG("Turning MANUAL mode OFF")
+            StateManager.autoMode = True
         if message == "left":
             DEBUG("Sending MANUAL command LEFT to the sentry")
-            StateManager.autoMode = True
+            StateManager.autoMode = False
             if StateManager.sentry:
-                StateManager.sentry.write_message("left")
+                StateManager.sentry.write_message("-10,0")
         if message == "right":
             DEBUG("Sending MANUAL command RIGHT to the sentry")
-            StateManager.autoMode = True
+            StateManager.autoMode = False
             if StateManager.sentry:
-                StateManager.sentry.write_message("right")
+                StateManager.sentry.write_message("10,0")
         if message == "up":
             DEBUG("Sending MANUAL command UP to the sentry")
-            StateManager.autoMode = True
+            StateManager.autoMode = False
             if StateManager.sentry:
-                StateManager.sentry.write_message("up")
+                StateManager.sentry.write_message("0,-10")
         if message == "down":
             DEBUG("Sending MANUAL command DOWN to the sentry")
-            StateManager.autoMode = True
+            StateManager.autoMode = False
             if StateManager.sentry:
-                StateManager.sentry.write_message("down")
+                StateManager.sentry.write_message("0,10")
         if message == "fire":
             DEBUG("Sending MANUAL command FIRE to the sentry")
-            StateManager.autoMode = True
+            StateManager.autoMode = False
             if StateManager.sentry:
                 StateManager.sentry.write_message("fire")
 

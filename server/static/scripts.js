@@ -60,6 +60,7 @@ function onClickManual(event) {
       direction_buttons[i].classList.remove("disabled-button");
       direction_buttons[i].disabled = false;
     }
+    sendControl("manualOn");
   } else {
     let auto_switches = document.getElementsByClassName("auto");
     for (var i = 0, max = auto_switches.length; i < max; i++) {
@@ -73,6 +74,7 @@ function onClickManual(event) {
       direction_buttons[i].classList.add("disabled-button");
       direction_buttons[i].disabled = true;
     }
+    sendControl("manualOff");
   }
 }
 
