@@ -1,8 +1,8 @@
 #include "servo.hpp"
 
 Servos::Servos()
-    : basePin {4},
-      panPin {18},
+    : basePin {14},
+      panPin {12},
       basePos {90},
       panPos {180}
 { 

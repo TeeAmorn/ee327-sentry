@@ -26,28 +26,28 @@ void moveMotorsTask(void * parameters) {
         TIMERG0.wdt_wprotect=TIMG_WDT_WKEY_VALUE;
         TIMERG0.wdt_feed=1;
         TIMERG0.wdt_wprotect=0;
-        if (motors.new_command == "1") {        //north
+        if (motors.new_command == "NORTH") {        //north
             while(motors.absDistanceToPosn(motors.base_enc, NORTH) > 7) {
                 motors.goshortestWay(NORTH, motors.base_enc, motors.base);
             }
             motors.base.motor_speed_zero(); //stops motor
             motors.desired_base = NORTH;    //updates desired base to north
         }
-        else if (motors.new_command == "2") {   //east
+        else if (motors.new_command == "EAST") {   //east
             while(motors.absDistanceToPosn(motors.base_enc, EAST) > 7) {
                 motors.goshortestWay(EAST, motors.base_enc, motors.base);
             }
             motors.base.motor_speed_zero(); //stops motor
             motors.desired_base = EAST;     //updates desired base to east
         }    
-        else if (motors.new_command == "3") {   //south
+        else if (motors.new_command == "SOUTH") {   //south
             while(motors.absDistanceToPosn(motors.base_enc, SOUTH) > 7) {
                 motors.goshortestWay(SOUTH, motors.base_enc, motors.base);
             }
             motors.base.motor_speed_zero(); //stops motor
             motors.desired_base = SOUTH;    //updates desired base to east
         }    
-        else if (motors.new_command == "4") {   //west
+        else if (motors.new_command == "WEST") {   //west
             while(motors.absDistanceToPosn(motors.base_enc, WEST) > 7) {
                 motors.goshortestWay(WEST, motors.base_enc, motors.base);
             }
