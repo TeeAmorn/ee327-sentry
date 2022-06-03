@@ -493,22 +493,22 @@ class StreamSocketHandler(tornado.websocket.WebSocketHandler):
             DEBUG("Sending MANUAL command LEFT to the sentry")
             StateManager.autoMode = False
             if StateManager.sentry:
-                StateManager.sentry.write_message("-10,0")
+                StateManager.sentry.write_message("-60,0")
         if message == "right":
             DEBUG("Sending MANUAL command RIGHT to the sentry")
             StateManager.autoMode = False
             if StateManager.sentry:
-                StateManager.sentry.write_message("10,0")
+                StateManager.sentry.write_message("60,0")
         if message == "up":
             DEBUG("Sending MANUAL command UP to the sentry")
             StateManager.autoMode = False
             if StateManager.sentry:
-                StateManager.sentry.write_message("0,-10")
+                StateManager.sentry.write_message("0,-60")
         if message == "down":
             DEBUG("Sending MANUAL command DOWN to the sentry")
             StateManager.autoMode = False
             if StateManager.sentry:
-                StateManager.sentry.write_message("0,10")
+                StateManager.sentry.write_message("0,60")
         if message == "fire":
             DEBUG("Sending MANUAL command FIRE to the sentry")
             StateManager.autoMode = False
