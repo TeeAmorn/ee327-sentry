@@ -39,14 +39,14 @@ void moveMotorsTask(void * parameters) {
             }
             motors.base.motor_speed_zero(); //stops motor
             motors.desired_base = EAST;     //updates desired base to east
-        }    
+        }
         else if (motors.new_command == "SOUTH") {   //south
             while(motors.absDistanceToPosn(motors.base_enc, SOUTH) > 7) {
                 motors.goshortestWay(SOUTH, motors.base_enc, motors.base);
             }
             motors.base.motor_speed_zero(); //stops motor
             motors.desired_base = SOUTH;    //updates desired base to east
-        }    
+        }
         else if (motors.new_command == "WEST") {   //west
             while(motors.absDistanceToPosn(motors.base_enc, WEST) > 7) {
                 motors.goshortestWay(WEST, motors.base_enc, motors.base);
@@ -107,8 +107,8 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
 
 void setup() {
     // put your  setup code here, to run once:
-    Serial.begin(9600);
-    
+    Serial.begin(115200);
+
     xTaskCreate(
         moveMotorsTask,  //function to imnplement the task
         "moveMotors",           //name of the task
@@ -116,7 +116,7 @@ void setup() {
         NULL,                   //task input parameter
         0,                      //priority of the task
         NULL                   //task handle
-    );    
+    );
 
     // Connect to WiFi
     WiFi.begin(ssid, passphrase);
@@ -147,7 +147,7 @@ void loop() {
     /*
     if (true) {
         // Take picture with camera
-        
+
         fb = esp_camera_fb_get();
         if (!fb) {
             Serial.println("Camera capture failed");
@@ -158,14 +158,14 @@ void loop() {
         // Send picture through WebSocket
         webSocket.sendBIN((const uint8_t *)fb->buf, fb->len);
         esp_camera_fb_return(fb);
-        
+
 
         // Print FPS as captured from the ESP32
         Serial.printf("%.2f\nlength: %d\n", 1000 / (double)(millis() - prevShot), fb->len);
 
         // Reset timer
         prevShot = millis();
-        
+
     }
     */
 }
